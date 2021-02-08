@@ -1,0 +1,6 @@
+flask>=1.1.2
+mariadb>=1.0.4
+gunicorn>=20.0.4
+gevent>=20.9.0
+uwsgi>=2.0.19.1
+kubernetes>=12.0.1

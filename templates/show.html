@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<table>
+    <tr>
+        <th>Version</th>
+        <th>Created</th>
+    </tr>
+    {% for row in versions %}
+        <tr>
+            <td>{{row.version}}</td>
+            <td>{{row.created}}</td>
+        </tr>
+    {% endfor %}
+    
+</table>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1 class="title">showing k8s versions for context "{{selected_context | capitalize }}"</h1>
+{% endblock %}
+
+{% block content %}
+<table>
+    <tr>
+        <th>Application</th>
+        <th>Version</th>
+    </tr>
+    {% for row in version_history %}
+        <tr>
+            <td><a href="{{url_for('show', context=selected_context, application=row.application) }}">{{row.application}}</a></td>
+            <td>{{row.version}}</td>
+        </tr>
+    {% endfor %}
+    
+</table>
+{% endblock %}

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<html>
+    <head>
+        <meta charset="UTF-8"> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="{{ url_for('static', filename='bulma.css') }}">
+        <title>k8s-version-dashboard</title>
+    </head>
+    <body>
+        <div class="container">
+            <nav class="navbar" role="navigation" aria-label="main navigation">
+                <div class="navbar-brand">
+                    <a class="navbar-item" href="{{ url_for('index') }}">
+                        k8s-version-dashboard
+                    </a>
+                </div>
+                <div class="navbar-menu">
+                    {% for context in contexts %}
+                        <a class="navbar-item {% if context == selected_context %}has-text-weight-bold{% endif %}" href="{{ url_for('index', context=context) }}">{{context}}</a>
+                    {% endfor %}
+                </div>
+            </nav>
+
+            {% block header %}{% endblock %}
+            <section class="content">
+                {% block content %}{% endblock %}
+            </section>
+        </div>
+    </body>
+</html>
