@@ -10,6 +10,10 @@ pip3 install -r requirements.txt
 ```
 You should now see a prefix `(venv)` in your command line. To leave the virtual environment just type `deactivate`.
 
+## Import mysql schema manually
+
+You can import the sql schema located under `sql_schema` via `mysql -h hostname < sql_schema/schema.sql`
+
 ## required environment variables
 
 ```
@@ -20,13 +24,17 @@ export MYSQL_PASSWORD=password
 export MYSQL_PORT=3306
 ```
 
-## Import mysql schema manually
+## Add cluster credentials to the Dockerfile (GCP)
 
-You can import the sql schema located under `sql_schema` via `mysql -h hostname < sql_schema/schema.sql`
+To add cluster credentials to the Dockerfile you will need to adapt the following command lines in Dockerfile:
+```
+# The example here is for Google Cloud Platform / GKE: 
+RUN gcloud container clusters get-credentials <cluster name> --zone <zone> --project <project>
+RUN kubectl config rename-context <old context> <new context>
+```
+The docker file expects a service account key file `credentials.json` in the same path to authenticate to the cluster(s). 
 
-## CSS Template
-
-This project is based on the css template bulma.io: https://github.com/jgthms/bulma
+For other cloud platforms, the Dockerfile would have to be adapted accordingly.
 
 ## Updating the version history
 
