@@ -22,9 +22,9 @@ def get_kubernetes_workloads(context):
         config.load_kube_config(context=context)
         api = client.AppsV1Api()
 
-        deployments = api.list_deployment_for_all_namespaces(watch=False)
-        statefulsets = api.list_stateful_set_for_all_namespaces(watch=False)
-        daemonsets = api.list_daemon_set_for_all_namespaces(watch=False)
+        deployments = api.list_namespaced_deployment(namespace="default", watch=False)
+        statefulsets = api.list_namespaced_deployment(namespace="default", watch=False)
+        daemonsets = api.list_namespaced_deployment(namespace="default", watch=False)
 
         k8s_workloads = [deployments, statefulsets, daemonsets]
 

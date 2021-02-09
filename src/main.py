@@ -135,6 +135,7 @@ def add_to_version_history(item, context, updated_applications):
                 'version': version
             })
 
+
 @app.route("/health")
 def health():
     """
