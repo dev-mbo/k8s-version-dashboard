@@ -89,6 +89,7 @@ def show(context, application):
     versions = get_all_versions_for_application(application, context)
     return render_template(
         'show.html',
+        application=application,
         versions=versions,
         contexts=contexts,
         selected_context=context
