@@ -7,7 +7,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 RUN apt-get update && apt-get install -y nano mariadb-server
 
-RUN curl -sSL https://sdk.cloud.google.com > /tmp/gcl && bash /tmp/gcl --install-dir=/root --disable-prompts
+RUN curl -sSL https://sdk.cloud.google.com > /tmp/gcl 
+RUN bash /tmp/gcl --install-dir=/root --disable-prompts
 
 ENV PATH $PATH:/root/google-cloud-sdk/bin
 
@@ -19,8 +20,8 @@ COPY credentials.json credentials.json
 RUN gcloud auth activate-service-account --key-file credentials.json
 
 # Individual kubernetes clusters can be added here: 
-RUN gcloud container clusters get-credentials <cluster name> --zone <zone> --project <project>
-RUN kubectl config rename-context <old cluster context> <new cluster context>
+# RUN gcloud container clusters get-credentials <cluster name> --zone <zone> --project <project id>
+# RUN kubectl config rename-context <old context> <new context>
 
 EXPOSE 5000
 
