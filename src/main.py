@@ -1,12 +1,14 @@
+"""
+    k8s-version-dashboard flask app
+"""
+import os
+from markupsafe import escape
 from flask import (
     Flask,
-    url_for,
     abort,
     render_template,
-    redirect,
     request,
-    jsonify,
-    g
+    jsonify
 )
 from database import (
     close_db,
@@ -14,35 +16,31 @@ from database import (
     get_all_versions_for_application,
     get_latest_versions_for_context,
     add_context,
-    add_version,
-    add_application
+    add_version_and_application
 )
 from k8s import (
     get_kubernetes_workloads
 )
-from markupsafe import escape
-from pprint import pprint
-import os
 
 
 def create_app():
     """
-    create the flask app object
+    Create the flask app object
     """
-    app = Flask(
-        __name__, 
+    flask_app = Flask(
+        __name__,
         template_folder='../templates',
         static_folder='../static'
         )
-    app.config.from_mapping(
-        MYSQL_DATABASE = os.environ.get('MYSQL_DATABASE'),
-        MYSQL_HOST = os.environ.get('MYSQL_HOST'),
-        MYSQL_USER = os.environ.get('MYSQL_USER'),
-        MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD'),
-        MYSQL_PORT = int(os.environ.get('MYSQL_PORT'))
+    flask_app.config.from_mapping(
+        MYSQL_DATABASE=os.environ.get('MYSQL_DATABASE'),
+        MYSQL_HOST=os.environ.get('MYSQL_HOST'),
+        MYSQL_USER=os.environ.get('MYSQL_USER'),
+        MYSQL_PASSWORD=os.environ.get('MYSQL_PASSWORD'),
+        MYSQL_PORT=int(os.environ.get('MYSQL_PORT'))
     )
-    app.teardown_appcontext(close_db)
-    return app
+    flask_app.teardown_appcontext(close_db)
+    return flask_app
 
 
 app = create_app()
@@ -52,20 +50,34 @@ app = create_app()
 @app.route('/<context>')
 def index(context):
     """
-    the kubernetes versions for the given kubernetes context parameter are looked up in the database and shown in a table
+    The kubernetes versions for the given kubernetes context parameter are
+    looked up in the database and shown in a table
     """
     contexts = get_k8s_contexts()
 
     if context in contexts:
         version_history = get_latest_versions_for_context(context)
 
-        return render_template('index.html', selected_context=context, contexts=contexts, version_history=version_history)
-        
+        return render_template(
+            'index.html',
+            selected_context=context,
+            contexts=contexts,
+            version_history=version_history
+        )
+
     if not context:
-        return render_template("error.html", error=f"select a kubernetes context from the menu", contexts=contexts)
+        return render_template(
+            "error.html",
+            error=f"select a kubernetes context from the menu",
+            contexts=contexts
+        )
 
 
-    return render_template("error.html", error=f"no k8s context with name '{escape(context)}' could be found", contexts=contexts)
+    return render_template(
+        "error.html",
+        error=f"no k8s context with name '{escape(context)}' could be found",
+        contexts=contexts
+    )
 
 
 @app.route("/<context>/<application>")
@@ -80,7 +92,7 @@ def show(context, application):
 @app.route("/update-version-history/<context>")
 def update_version_history(context):
     """
-    update all version numbers of all components that can be found in the given kubernetes context
+    Update all version numbers of all components that can be found in the given kubernetes context
     """
     if request.method == "GET":
 
@@ -90,29 +102,44 @@ def update_version_history(context):
             abort(500, "An error occured")
 
         add_context(escape(context))
+        updated_applications = []
 
         for workload_type in k8s_workloads:
             for item in workload_type.items:
                 try:
-                    image = item.spec.template.spec.containers[0].image
-                    splitImage = image.split(":")
-                    if (len(splitImage) > 1):
-                        version = splitImage[1]
-                        application = splitImage[0].split("/")[-1]
-                        # pprint(f"application: {application} version: {version}")
+                    add_to_version_history(item, context, updated_applications)
 
-                        if version and application:
-                            add_application(escape(application))
-                            add_version(escape(version), context, application)
+                except AttributeError as error:
+                    abort(
+                        500,
+                        f"An error occured when trying to fetch \
+                            the the version number of a workload: {error}"
+                    )
 
-                except AttributeError as e:
-                    abort(500, "An error occured when trying to fetch the the version number of a workload: {e}")
+        return jsonify(updated_applications)
 
-        return "OK"
 
+def add_to_version_history(item, context, updated_applications):
+    """
+    Get the application and version from the kubernetes template and store it in the database
+    """
+    image = item.spec.template.spec.containers[0].image
+    split_image = image.split(":")
+    if len(split_image) > 1:
+        version = split_image[1]
+        application = split_image[0].split("/")[-1]
+
+        if add_version_and_application(version, context, application):
+            updated_applications.append({
+                'application': application,
+                'version': version
+            })
 
 @app.route("/health")
 def health():
+    """
+    Simple health check for kubernetes
+    """
     return "OK"
 
 

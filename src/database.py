@@ -1,7 +1,10 @@
-import mariadb
+"""
+module to operate on the database
+"""
 import sys
-from flask import Flask, current_app, g
 from pprint import pprint
+import mariadb
+from flask import current_app, g
 
 
 def get_db():
@@ -14,19 +17,26 @@ def get_db():
     password = current_app.config['MYSQL_PASSWORD']
     database = current_app.config['MYSQL_DATABASE']
 
-    if 'db' not in g: 
-        try: 
-            g.db = mariadb.connect(host=host, port=port, user=user, password=password, database=database, autocommit=True)
-        except mariadb.Error as e:
-            current_app.logger.error(f"Error connecting to database: {e}")
+    if 'db' not in g:
+        try:
+            g.db = mariadb.connect(
+                host=host,
+                port=port,
+                user=user,
+                password=password,
+                database=database,
+                autocommit=True
+            )
+        except mariadb.Error as error:
+            current_app.logger.error(f"Error connecting to database: {error}")
             sys.exit(1)
 
     return g.db
 
 
-def close_db(e=None):
+def close_db(event=None):
     """
-    close database connection, this function is called in the teardown context of the app 
+    close database connection, this function is called in the teardown context of the app
     """
     db = g.pop('db', None)
 
@@ -36,7 +46,7 @@ def close_db(e=None):
 
 def get_all_versions_for_application(application, context):
     """
-    fetch all versions that have been logged for an application and the corresponding context 
+    fetch all versions that have been logged for an application and the corresponding context
     """
     try:
         cur = get_db().cursor()
@@ -44,12 +54,12 @@ def get_all_versions_for_application(application, context):
             """
             SELECT v.version_no as version,
                    v.created as created
-            FROM version_history v 
+            FROM version_history v
             INNER JOIN application a ON a.id = v.application_id
             INNER JOIN context c ON c.id = v.context_id
-            WHERE a.name = ? 
+            WHERE a.name = ?
             AND c.name = ?
-            ORDER BY created DESC 
+            ORDER BY created DESC
             """,
             (application, context)
         )
@@ -60,8 +70,8 @@ def get_all_versions_for_application(application, context):
                 'created': created
             })
         return versions
-    except mariadb.Error as e:
-        current_app.logger.error(f"Error: {e}")
+    except mariadb.Error as error:
+        current_app.logger.error(f"Error: {error}")
 
 
 def get_k8s_contexts():
@@ -71,11 +81,11 @@ def get_k8s_contexts():
     try:
         cur = get_db().cursor()
         cur.execute(
-        """
-            SELECT name as context_name 
-            FROM context 
-            ORDER BY name ASC
-        """
+            """
+                SELECT name as context_name
+                FROM context
+                ORDER BY name ASC
+            """
         )
         contexts = []
         for [context_name] in cur:
@@ -83,13 +93,13 @@ def get_k8s_contexts():
             contexts.append(context_name)
 
         return contexts
-    except mariadb.Error as e:
-        current_app.logger.error(f"Error: {e}")
+    except mariadb.Error as error:
+        current_app.logger.error(f"Error: {error}")
 
 
 def get_latest_versions_for_context(context):
     """
-    fetch the latest versions for a kubernetes context 
+    fetch the latest versions for a kubernetes context
     """
     try:
         cur = get_db().cursor()
@@ -117,18 +127,18 @@ def get_latest_versions_for_context(context):
                 'version': version,
             })
         return version_history
-    except mariadb.Error as e:
-        current_app.logger.error(f"Error: {e}")
+    except mariadb.Error as error:
+        current_app.logger.error(f"Error: {error}")
 
 
 def add_context(context):
     """
-    add a kubernetes context to context sql table    
+    add a kubernetes context to context sql table
     """
     try:
         get_db().cursor().execute("INSERT IGNORE INTO context (name) VALUES (?)", [context])
-    except mariadb.Error as e:
-        current_app.logger.error(f"Error: {e}")
+    except mariadb.Error as error:
+        current_app.logger.error(f"Error: {error}")
 
 
 def add_application(application):
@@ -137,8 +147,8 @@ def add_application(application):
     """
     try:
         get_db().cursor().execute("INSERT IGNORE INTO application (name) VALUES (?)", [application])
-    except mariadb.Error as e:
-        current_app.logger.error(f"Error: {e}")
+    except mariadb.Error as error:
+        current_app.logger.error(f"Error: {error}")
 
 
 def add_version(version, context, application):
@@ -151,33 +161,56 @@ def add_version(version, context, application):
         if last_added_version is None or last_added_version != version:
             get_db().cursor().execute(
                 """
-                    INSERT IGNORE INTO version_history (application_id, context_id, version_no) 
-                    VALUES((SELECT id from application WHERE name = ?), (SELECT id from context where name = ?), ?)
+                    INSERT IGNORE INTO version_history (application_id, context_id, version_no)
+                    VALUES(
+                        (SELECT id from application WHERE name = ?),
+                        (SELECT id from context where name = ?),
+                        ?
+                    )
                 """,
                 (application, context, version)
             )
-    except mariadb.Error as e:
-        current_app.logger.error(f"Error: {e}")
+            return True
+
+        return False
+    except mariadb.Error as error:
+        current_app.logger.error(f"Error: {error}")
 
 
 def get_last_added_version(application, context):
+    """
+    retrieve the last added version for an application in a cluster context, to test
+    if the new version is the same as the previous one
+    """
     try:
         cur = get_db().cursor()
         cur.execute(
-        """
-            SELECT v.version_no 
-            FROM version_history v
-            INNER JOIN application a ON a.id = v.application_id
-            INNER JOIN context c ON c.id = v.context_id 
-            WHERE a.name = ? 
-            AND c.name = ? 
-            ORDER BY created DESC LIMIT 1
-        """, (application, context)
+            """
+                SELECT v.version_no
+                FROM version_history v
+                INNER JOIN application a ON a.id = v.application_id
+                INNER JOIN context c ON c.id = v.context_id
+                WHERE a.name = ?
+                AND c.name = ?
+                ORDER BY created DESC LIMIT 1
+            """,
+            (application, context)
         )
         row = cur.fetchone()
         if row is not None:
             return row[0]
 
         return None
-    except mariadb.Error as e:
-        current_app.logger.error(f"Error: {e}")
+    except mariadb.Error as error:
+        current_app.logger.error(f"Error: {error}")
+
+
+def add_version_and_application(version, context, application):
+    """
+    add new row to version history
+    """
+    if version and context and application:
+        add_application(application)
+        return add_version(version, context, application)
+
+    return False
