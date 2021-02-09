@@ -27,4 +27,4 @@ EXPOSE 5000
 ENV FLASK_APP=src/main.py
 ENV FLASK_RUN_HOST=0.0.0.0
 
-CMD ["sh", "-c", "gunicorn -w 4 -t 100 -k gevent -b 0.0.0.0:5000 main:app"]
+CMD ["sh", "-c", "gunicorn -w 4 -t 100 -k gevent -b 0.0.0.0:5000 main:app --chdir src"]
