@@ -85,8 +85,14 @@ def show(context, application):
     """
     Show the complete version history for an application and the corresponding context
     """
+    contexts = get_k8s_contexts()
     versions = get_all_versions_for_application(application, context)
-    return render_template('show.html', versions=versions, selected_context=context)
+    return render_template(
+        'show.html',
+        versions=versions,
+        contexts=contexts,
+        selected_context=context
+    )
 
 
 @app.route("/update-version-history/<context>")
