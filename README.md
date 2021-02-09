@@ -17,12 +17,13 @@ You can import the sql schema located under `sql_schema` via `mysql -h hostname 
 
 ## required environment variables
 
+You can use `python-dotenv` to inject all environment variables automatically from a file. Simply add the following variables in a `.env`-file inside the root folder and change their respective value.
 ```
-export MYSQL_HOST=localhost
-export MYSQL_DATABASE=k8s_version_dashboard
-export MYSQL_USER=user
-export MYSQL_PASSWORD=password
-export MYSQL_PORT=3306
+MYSQL_HOST=localhost
+MYSQL_DATABASE=k8s_version_dashboard
+MYSQL_USER=user
+MYSQL_PASSWORD=password
+MYSQL_PORT=3306
 ```
 
 ## Add cluster credentials to the Dockerfile (GCP)
