@@ -1,6 +1,6 @@
 services:
   db:
-    image: mysql:latest
+    image: mariadb:latest
     volumes:
       - ./sql_data:/var/lib/mysql:Z
       - ./sql_schema:/docker-entrypoint-initdb.d:Z,ro
