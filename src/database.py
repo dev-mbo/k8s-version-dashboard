@@ -2,7 +2,6 @@
 module to operate on the database
 """
 import sys
-from pprint import pprint
 import mariadb
 from flask import current_app, g
 
@@ -89,7 +88,6 @@ def get_k8s_contexts():
         )
         contexts = []
         for [context_name] in cur:
-            print(context_name)
             contexts.append(context_name)
 
         return contexts
@@ -157,7 +155,6 @@ def add_version(version, context, application):
     """
     try:
         last_added_version = get_last_added_version(application, context)
-        pprint(f"last_added_version: {application} {last_added_version} {version}")
         if last_added_version is None or last_added_version != version:
             get_db().cursor().execute(
                 """

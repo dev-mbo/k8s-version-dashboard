@@ -4,3 +4,4 @@ venv/
 test.sh
 credentials.json
 .env
+sql_data/

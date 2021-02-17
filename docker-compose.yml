@@ -1,0 +1,20 @@
+services:
+  db:
+    image: mysql:latest
+    volumes:
+      - ./sql_data:/var/lib/mysql:Z
+      - ./sql_schema:/docker-entrypoint-initdb.d:Z,ro
+    ports:
+      - "3306:3306" 
+    restart: always
+    env_file:
+      - .env
+  web:
+    depends_on:
+      - db
+    build: .
+    ports:
+      - "5000:5000"
+    restart: always
+    env_file:
+      - .env
