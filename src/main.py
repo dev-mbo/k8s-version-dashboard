@@ -24,6 +24,9 @@ from k8s import (
 
 
 def env_override(value, key):
+    """
+    jinja filter to a override the value with an environment variable
+    """
     return os.getenv(key, value)
 
 
@@ -74,7 +77,7 @@ def index(context):
     if not context:
         return render_template(
             "error.html",
-            error=f"select a kubernetes context from the menu",
+            error="select a kubernetes context from the menu",
             contexts=contexts
         )
 
@@ -107,15 +110,15 @@ def update_version_history(context):
     """
     Update all version numbers of all components that can be found in the given kubernetes context
     """
+    updated_applications = []
     if request.method == "GET":
 
         k8s_workloads = get_kubernetes_workloads(context)
 
-        if k8s_workloads is None:
+        if not k8s_workloads:
             abort(500, "An error occured")
 
         add_context(escape(context))
-        updated_applications = []
 
         for workload_type in k8s_workloads:
             for item in workload_type.items:
@@ -129,7 +132,7 @@ def update_version_history(context):
                             the the version number of a workload: {error}"
                     )
 
-        return jsonify(updated_applications)
+    return jsonify(updated_applications)
 
 
 def add_to_version_history(item, context, updated_applications):

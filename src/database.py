@@ -47,6 +47,7 @@ def get_all_versions_for_application(application, context):
     """
     fetch all versions that have been logged for an application and the corresponding context
     """
+    versions = []
     try:
         cur = get_db().cursor()
         cur.execute(
@@ -68,15 +69,16 @@ def get_all_versions_for_application(application, context):
                 'version': version,
                 'created': created
             })
-        return versions
     except mariadb.Error as error:
         current_app.logger.error(f"Error: {error}")
 
+    return versions
 
 def get_k8s_contexts():
     """
     fetch all available kubernetes context from the database
     """
+    contexts = []
     try:
         cur = get_db().cursor()
         cur.execute(
@@ -94,11 +96,14 @@ def get_k8s_contexts():
     except mariadb.Error as error:
         current_app.logger.error(f"Error: {error}")
 
+    return contexts
+
 
 def get_latest_versions_for_context(context):
     """
     fetch the latest versions for a kubernetes context
     """
+    version_history = []
     try:
         cur = get_db().cursor()
         cur.execute(
@@ -126,10 +131,10 @@ def get_latest_versions_for_context(context):
                 'created': created,
                 'version': version
             })
-        return version_history
     except mariadb.Error as error:
         current_app.logger.error(f"Error: {error}")
 
+    return version_history
 
 def add_context(context):
     """
@@ -170,10 +175,10 @@ def add_version(version, context, application):
                 (application, context, version)
             )
             return True
-
-        return False
     except mariadb.Error as error:
         current_app.logger.error(f"Error: {error}")
+
+    return False
 
 
 def get_last_added_version(application, context):
@@ -199,10 +204,10 @@ def get_last_added_version(application, context):
         if row is not None:
             return row[0]
 
-        return None
     except mariadb.Error as error:
         current_app.logger.error(f"Error: {error}")
 
+    return None
 
 def add_version_and_application(version, context, application):
     """

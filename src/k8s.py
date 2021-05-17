@@ -18,6 +18,7 @@ def get_kubernetes_workloads(context):
     """
     get kubernetes workloads in cluster context
     """
+    k8s_workloads = []
     try:
         config.load_kube_config(context=context)
         api = client.AppsV1Api()
@@ -28,10 +29,11 @@ def get_kubernetes_workloads(context):
 
         k8s_workloads = [deployments, statefulsets, daemonsets]
 
-        return k8s_workloads
     except ApiException as error:
         current_app.logger.error(f"An error occured when fetching the \
             workloads for context {context}: {error}")
     except ConfigException as error:
         current_app.logger.error(f"An error occured when loading the config \
             for context {context}: {error}")
+
+    return k8s_workloads
