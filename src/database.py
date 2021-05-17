@@ -104,6 +104,7 @@ def get_latest_versions_for_context(context):
         cur.execute(
             """
             SELECT v.version_no as version,
+                   v.created as created,
                    a.name as application
             FROM version_history v
             INNER JOIN application a ON a.id = v.application_id
@@ -119,10 +120,11 @@ def get_latest_versions_for_context(context):
             [context]
         )
         version_history = []
-        for (version, application) in cur:
+        for (version, created, application) in cur:
             version_history.append({
                 'application': application,
-                'version': version,
+                'created': created,
+                'version': version
             })
         return version_history
     except mariadb.Error as error:
