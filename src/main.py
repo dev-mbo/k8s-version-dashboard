@@ -23,6 +23,10 @@ from k8s import (
 )
 
 
+def env_override(value, key):
+    return os.getenv(key, value)
+
+
 def create_app():
     """
     Create the flask app object
@@ -39,6 +43,8 @@ def create_app():
         MYSQL_PASSWORD=os.environ.get('MYSQL_PASSWORD'),
         MYSQL_PORT=int(os.environ.get('MYSQL_PORT'))
     )
+
+    flask_app.jinja_env.filters['env_override'] = env_override
     flask_app.teardown_appcontext(close_db)
     return flask_app
 

@@ -12,7 +12,12 @@
             <nav class="navbar" role="navigation" aria-label="main navigation">
                 <div class="navbar-brand">
                     <a class="navbar-item" href="{{ url_for('index') }}">
-                        k8s-version-dashboard
+                        {% set logo_path = "" | env_override('LOGO_SRC') %}
+                        {% if logo_path %}
+                            <img src="{{ logo_path }}" width="100" />
+                        {% else %}
+                            k8s-version-dashboard
+                        {% endif %}
                     </a>
                 </div>
                 <div class="navbar-menu">
